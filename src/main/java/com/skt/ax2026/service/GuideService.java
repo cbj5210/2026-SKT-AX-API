@@ -7,11 +7,14 @@ import com.skt.ax2026.dto.GeminiResponse;
 import com.skt.ax2026.dto.GuideRequest;
 import com.skt.ax2026.dto.GuideResponse;
 import com.skt.ax2026.properties.GeminiProperty;
+import java.time.Duration;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.util.retry.Retry;
 
 @Slf4j
 @Service
@@ -43,6 +46,8 @@ public class GuideService {
 			                    .bodyValue(requestBody)
 			                    .retrieve()
 			                    .bodyToMono(GeminiResponse.class)
+			                    .retryWhen(Retry.backoff(3, Duration.ofSeconds(2)) // 최대 3번, 2초부터 지연 시간 증가하며 재시도
+			                                    .filter(throwable -> throwable instanceof WebClientResponseException.TooManyRequests))
 			                    .block();
 		} catch (Exception e) {
 			log.error("Error communicating with Gemini API", e);
