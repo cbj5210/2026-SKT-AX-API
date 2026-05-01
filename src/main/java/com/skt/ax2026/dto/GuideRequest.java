@@ -6,7 +6,9 @@ import java.util.List;
 public record GuideRequest(
     String userGoal,
     List<String> failedElements,
-    List<UiNode> uiTree
+    List<UiNode> uiTree,
+    int screenWidth,
+    int screenHeight
 ) {
     public record UiNode(
         String text,

@@ -83,9 +83,14 @@ public class GuideService {
 
 			return String.format(
 			  "You are an AI assistant helping a senior user navigate a mobile app.\n" +
-				"The user's goal is: '%s'\n%s\n" +
+				"The user's goal is: '%s'\n" +
+				"Screen boundaries: width=%d, height=%d\n%s\n" +
 				"Here is the current UI tree in JSON format:\n%s\n\n" +
 				"Please analyze the UI tree and identify the exact button or element the user needs to click next to achieve their goal.\n" +
+				"IMPORTANT RULES:\n" +
+				"1. An element is VISIBLE only if its 0 <= x <= screenWidth and 0 <= y <= screenHeight.\n" +
+				"2. If the target element exists but is currently OFF-SCREEN (y > height), you MUST set actionStatus to 'CONTINUE' and provide the coordinates. Do NOT set actionStatus to 'FINISHED' until the element is actually visible and the user has reached the final destination.\n" +
+				"3. If the user is ALREADY on the final target screen and the goal is achieved, set actionStatus to 'FINISHED'.\n\n" +
 				"Return a JSON response with the following format EXACTLY:\n" +
 				"{\n" +
 				"  \"targetElement\": {\n" +
@@ -96,7 +101,7 @@ public class GuideService {
 				"  \"guideMessage\": \"<friendly, easy-to-understand message in Korean to show the user>\",\n" +
 				"  \"actionStatus\": \"CONTINUE\" // \"CONTINUE\", \"FINISHED\" (if goal achieved), or \"BACK\" (if on the wrong screen and needs to go back)\n" +
 				"}",
-			  request.userGoal(), failedElementsStr, uiTreeJson
+			  request.userGoal(), request.screenWidth(), request.screenHeight(), failedElementsStr, uiTreeJson
 			);
 		} catch (JsonProcessingException e) {
 			throw new RuntimeException("Failed to build prompt from UI tree", e);
